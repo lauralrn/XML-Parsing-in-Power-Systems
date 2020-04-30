@@ -20,7 +20,8 @@ from Classes.RegulatingControl import RegulatingControl
 from Classes.EnergyConsumer import EnergyConsumer
 from Classes.PowerTransformerEnd import PowerTransformerEnd
 from Classes.RatioTapChanger import RatioTapChanger
-from ConnectionsFinder import *
+# from ConnectionsFinder import *
+import pandapower.plotting.to_html as simple_plotly
 
 
 #Import the ElementTree library
@@ -37,8 +38,8 @@ from TopologyGenerator import topology_generator
 net = pp.create_empty_network()
 
 #Creation of a tree by parsing the XML file referenced
-#tree_EQ = ET.parse('Assignment_EQ_reduced.xml')
-#tree_SSH = ET.parse('Assignment_SSH_reduced.xml')
+# tree_EQ = ET.parse('Assignment_EQ_reduced.xml')
+# tree_SSH = ET.parse('Assignment_SSH_reduced.xml')
 tree_EQ = ET.parse('MicroGridTestConfiguration_T1_BE_EQ_V2.xml')
 tree_SSH = ET.parse('MicroGridTestConfiguration_T1_BE_SSH_V2.xml')
 
@@ -56,6 +57,21 @@ ns = {'cim': 'http://iec.ch/TC57/2013/CIM-schema-cim16#',
 
 # fix the problem of dual use of the curly braces in python dictionaries and the XML namespace tags.
 for equipment in microgrid.findall('.//*', ns):
+    # clean the tags of all elements
+    equipment.tag = equipment.tag.replace("{"+ns['cim']+"}","")
+    equipment.tag = equipment.tag.replace("{" + ns['entsoe'] + "}", "")
+    equipment.tag = equipment.tag.replace(ns['rdf'], "")
+
+
+    # clean the attributes of all elements
+    #print(equipment.attrib)
+    if equipment.attrib:
+        for mykey in equipment.attrib.keys():
+            clean_key = mykey.replace(ns['rdf'], "")
+            equipment.attrib[clean_key] = equipment.attrib.pop(mykey)
+
+# fix the problem of dual use of the curly braces in python dictionaries and the XML namespace tags.
+for equipment in microgrid_SSH.findall('.//*', ns):
     # clean the tags of all elements
     equipment.tag = equipment.tag.replace("{"+ns['cim']+"}","")
     equipment.tag = equipment.tag.replace("{" + ns['entsoe'] + "}", "")
@@ -128,7 +144,7 @@ for compensator in microgrid.findall('LinearShuntCompensator'):
     equipmentCont = compensator.find('Equipment.EquipmentContainer').attrib['resource']
     voltage = float(compensator.find('ShuntCompensator.nomU').text)
     p = 0
-    q = b * voltage**2
+    q = float(b * voltage**2)
     linear_shunt_compensator_list.append(LinearShuntCompensator(ID, name, b, g, equipmentCont, voltage, p, q))
 
 
@@ -157,15 +173,15 @@ for unit in microgrid.findall('GeneratingUnit'):
     equipment = unit.find('Equipment.EquipmentContainer').attrib['resource']
     generating_unit_list.append(GeneratingUnit(ID, name, maxP, minP,power, equipment))
 
-# Synchronous Machines
+# Function that returns P and Q from SSH file
 P = []
 Q = []
 
-for machine in microgrid_SSH.findall('SynchronousMachine'):
-    P.append(float(machine.find('RotatingMachine.p').text))
-    Q.append(float(machine.find('RotatingMachine.q').text))
-
-for machine in microgrid.findall('SynchronousMachine'):
+for gg in microgrid_SSH.findall('EnergyConsumer'):
+    P.append(gg.find('EnergyConsumer.p').text)
+    Q.append(gg.find('EnergyConsumer.q').text)
+# Synchronous Machines
+for i,machine in enumerate(microgrid.findall('SynchronousMachine')):
         ID = machine.get('ID')
         name = machine.find('IdentifiedObject.name').text
         rateS = float(machine.find('RotatingMachine.ratedS').text)
@@ -174,7 +190,9 @@ for machine in microgrid.findall('SynchronousMachine'):
         equipmentCont = machine.find('Equipment.EquipmentContainer').attrib['resource']
         baseVol=base_voltage_dict[equipmentCont[1:]]
 
-        synchronous_machine_list.append(SynchronousMachine(ID, name, rateS, P, Q, gen_unit, regContr, equipmentCont, baseVol))
+        synchronous_machine_list.append(SynchronousMachine(ID, name, rateS, P[i], Q[i], gen_unit, regContr, equipmentCont, baseVol))
+
+
 
 
 # RegulatingControl
@@ -200,17 +218,17 @@ for transformer in microgrid.findall('PowerTransformer'):
 P = []
 Q = []
 
-for ec in microgrid_SSH.findall(''):
+for ec in microgrid_SSH.findall('EnergyConsumer'):
     P.append(float(ec.find('EnergyConsumer.p').text))
     Q.append(float(ec.find('EnergyConsumer.q').text))
 
-for ec in microgrid.findall('EnergyConsumer'):
+for i,ec in enumerate(microgrid.findall('EnergyConsumer')):
     ID = ec.get('ID')
     name = ec.find('IdentifiedObject.name').text
     equipmentCont = ec.find('Equipment.EquipmentContainer').attrib['resource']
     baseVol = base_voltage_dict[equipmentCont[1:]]
 
-    energy_consumer_list.append(EnergyConsumer(ID, name, P, Q, equipmentCont, baseVol))
+    energy_consumer_list.append(EnergyConsumer(ID, name, P[i], Q[i], equipmentCont, baseVol))
 
 
 # Power Transformers End
@@ -219,13 +237,15 @@ for pt in microgrid.findall('PowerTransformerEnd'):
     name = pt.find('IdentifiedObject.name').text
     r = float(pt.find('PowerTransformerEnd.r').text)
     x = float(pt.find('PowerTransformerEnd.x').text)
+    s = float(pt.find('PowerTransformerEnd.ratedS').text)
     IDTransformer = pt.find('PowerTransformerEnd.PowerTransformer').attrib['resource']
     baseVol = pt.find('TransformerEnd.BaseVoltage').attrib['resource']
     terminal = pt.find('TransformerEnd.Terminal').attrib['resource']
     powerTransformer = pt.find('PowerTransformerEnd.PowerTransformer').attrib['resource']
+    end_number = pt.find('TransformerEnd.endNumber').text
 
-    power_transformer_end_list.append(PowerTransformerEnd(ID, name, r, x, IDTransformer,
-                                baseVol, terminal, powerTransformer))
+    power_transformer_end_list.append(PowerTransformerEnd(ID, name, r, x, s, IDTransformer,
+                                baseVol, terminal, powerTransformer, end_number))
 
 
 # Breaker
@@ -275,38 +295,81 @@ find_attached_busbar = connections_finder(microgrid, microgrid_SSH, base_voltage
 # The result of the function will track all the connections between the elements contained in the XML file
 
 # In this part the data needed to make a pandapower network will be found
+terminal_volt_dict = {}
+for transformerend in power_transformer_end_list:
+    tte = transformerend.terminal
+    terminal_volt_dict[tte[1:]] = transformerend
 
+base_volt_dict = {}
+for voltage in base_voltage_list:
+    baseVol = voltage.ID
+    base_voltage = voltage.name
+    base_volt_dict[baseVol] = base_voltage
 
 # BUS
 for bus in busbar_list:
-    pp.create_bus(net, index=bus.ID, name=bus.name, vn_kv=bus.voltage, type="b")
-
-#print(net.bus)
-
-# Shunt
-
-
-
-
-# Load
-
-
-# Line
-for line in AC_lines_list:
-    pass
-
-# Switch
-for switch in breaker_list:
-    bus = find_attached_busbar(switch)
-    #bus_pp = pp.get_element_index(net, "bus", bus.name)
-    #pp.create_switch(net, index=switch.ID, name=switch.name, bus=bus_pp, element= 'b')
-
-# Generator
-for generator in generating_unit_list:
-    bus = find_attached_busbar(generator)
-    bus_pp = pp.get_element_index(net, "bus", bus[0].name)
-    pp.create_gen(net, index=generator.ID, name=generator.name, bus= bus_pp, p_mw= generator.power)
+    pp.create_bus(net, name=bus.name, vn_kv=bus.voltage, type="b")
 
 # Transformer
 for transformer in power_transformer_list:
-    pass
+    bus_list, way_terminals = find_attached_busbar(transformer)
+    for bus, wt in zip(bus_list, way_terminals):
+        if terminal_volt_dict[wt].end_number == '1':
+            bus_high = bus
+            hv_bus = pp.get_element_index(net, "bus", bus.name)
+            vn =  terminal_volt_dict[wt].baseVol
+            vn_hv_kv = base_volt_dict[vn[1:]]
+            sn_mva = terminal_volt_dict[wt].s
+        elif terminal_volt_dict[wt].end_number == '2':
+            bus_low = bus
+            lv_bus = pp.get_element_index(net, "bus", bus.name)
+            vn = terminal_volt_dict[wt].baseVol
+            vn_lv_kv = base_volt_dict[vn[1:]]
+
+    pp.create_transformer_from_parameters(net, hv_bus =hv_bus, lv_bus =lv_bus, sn_mva = sn_mva, vn_hv_kv = vn_hv_kv,
+                                          vn_lv_kv = vn_lv_kv, vkr_percent=10, vk_percent=0.3, pfe_kw=0, i0_percent=0)
+
+print(net)
+
+# Shunt
+for shunt in linear_shunt_compensator_list:
+    bus, way_terminals = find_attached_busbar(shunt)
+    bus_name = bus[0].name
+    bus_pp = pp.get_element_index(net, "bus", bus_name)
+    pp.create_shunt(net, name=shunt.name, bus= bus_pp, p_mw = shunt.p, q_mvar = shunt.q)
+
+# Load
+for load in energy_consumer_list:
+    bus, way_terminals = find_attached_busbar(load)
+    bus_name = bus[0].name
+    bus_pp = pp.get_element_index(net, "bus", bus_name)
+    pp.create_load(net, name=load.name, bus= bus_pp, p_mw=load.P)
+
+# Line
+for line in AC_lines_list:
+    bus_list, way_terminals = find_attached_busbar(line)
+    from_bus = pp.get_element_index(net, "bus", bus_list[0].name)
+    to_bus = pp.get_element_index(net, "bus", bus_list[1].name)
+    pp.create_line_from_parameters(net, name=line.name, from_bus= from_bus, to_bus=to_bus, length_km=line.lenght,
+                                   r_ohm_per_km= line.r, x_ohm_per_km= line.x, c_nf_per_km=0, max_i_ka=0)
+
+# Switch
+for switch in breaker_list:
+    bus, way_terminals = find_attached_busbar(switch)
+    #print(bus)
+    bus_name = bus[0].name
+    bus_pp = pp.get_element_index(net, "bus", bus_name)
+    #pp.create_switch(net, index=switch.ID, name=switch.name, bus=bus_pp, element= 'b', et=b)
+
+# Generator
+for generator in generating_unit_list:
+    bus, way_terminals = find_attached_busbar(generator)
+    bus_name = bus[0].name
+    bus_pp = pp.get_element_index(net, "bus", bus_name)
+    pp.create_gen(net, name=generator.name, bus= bus_pp, p_mw= generator.power)
+
+simple_plotly(net, 'network.html')
+
+
+
+
