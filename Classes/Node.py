@@ -7,6 +7,7 @@ class Node:   # A node would be equivalent to an electrical connection
         self.container = container
         self.terminalList = []
 
+
     def add_terminal(self, newTerminal):
         self.terminalList.append(newTerminal)
 

@@ -20,6 +20,7 @@ from Classes.RegulatingControl import RegulatingControl
 from Classes.EnergyConsumer import EnergyConsumer
 from Classes.PowerTransformerEnd import PowerTransformerEnd
 from Classes.RatioTapChanger import RatioTapChanger
+from ConnectionsFinder import *
 
 
 #Import the ElementTree library
@@ -30,6 +31,7 @@ import pandapower as pp
 import pandas as pd
 
 #create an empty network
+from ConnectionsFinder import connections_finder
 from TopologyGenerator import topology_generator
 
 net = pp.create_empty_network()
@@ -260,7 +262,12 @@ for line in microgrid.findall('ACLineSegment'):
     AC_lines_list.append(ACLine(ID, name, equipmentCont, lenght, r, x, b, g, baseV))
 
 # Run the algorithm contained in the function
-everything_stack, CE_stack = topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list, linear_shunt_compensator_list,
+# everything_stack, CE_stack = topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list, linear_shunt_compensator_list,
+#                       substation_list, voltage_level_list, generating_unit_list, regulating_control_list,
+#                       power_transformer_list, energy_consumer_list, power_transformer_end_list, breaker_list,
+#                       ratio_tap_changer_list, synchronous_machine_list, AC_lines_list)
+
+find_attached_busbar = connections_finder(microgrid, microgrid_SSH, base_voltage_list, busbar_list, linear_shunt_compensator_list,
                       substation_list, voltage_level_list, generating_unit_list, regulating_control_list,
                       power_transformer_list, energy_consumer_list, power_transformer_end_list, breaker_list,
                       ratio_tap_changer_list, synchronous_machine_list, AC_lines_list)
@@ -268,19 +275,7 @@ everything_stack, CE_stack = topology_generator(microgrid, microgrid_SSH, base_v
 # The result of the function will track all the connections between the elements contained in the XML file
 
 # In this part the data needed to make a pandapower network will be found
-print(CE_stack)
-# Define function to check if element is a busbar
-def check_busbar(curr_node):
-    return isinstance(curr_node, BusBar)
 
-def find_busbar(element):
-    for bus in CE_stack:
-        if check_busbar(bus):
-            return bus
-    return False
-
-bus = find_busbar(CE_stack[1])
-print(bus)
 
 # BUS
 for bus in busbar_list:
@@ -289,21 +284,12 @@ for bus in busbar_list:
 #print(net.bus)
 
 # Shunt
-#for shunt in linear_shunt_compensator_list:
-#    pp.create_shunt(net, index=shunt.ID, name=shunt.name, p_mw= shunt.p, q_mvar= shunt.q)
+
+
+
 
 # Load
-for load in CE_stack:
-    if isinstance(load, EnergyConsumer):
-        if(not check_busbar(CE_stack.index(load)+1) and not check_busbar(CE_stack.index(load)-1)):
-            print('no bus')
-        else:
-            print(check_busbar(CE_stack.index(load)+1), 'and' ,check_busbar(CE_stack.index(load)-1))
-#for load in energy_consumer_list:
-#     for ce in CE_stack:
-#         if load==ce:
-#             bus=
-#     pp.create_load(net, index=load.ID, name=load.name, bus=bus)
+
 
 # Line
 for line in AC_lines_list:
@@ -311,11 +297,15 @@ for line in AC_lines_list:
 
 # Switch
 for switch in breaker_list:
-    pass
+    bus = find_attached_busbar(switch)
+    #bus_pp = pp.get_element_index(net, "bus", bus.name)
+    #pp.create_switch(net, index=switch.ID, name=switch.name, bus=bus_pp, element= 'b')
 
 # Generator
 for generator in generating_unit_list:
-    pass
+    bus = find_attached_busbar(generator)
+    bus_pp = pp.get_element_index(net, "bus", bus[0].name)
+    pp.create_gen(net, index=generator.ID, name=generator.name, bus= bus_pp, p_mw= generator.power)
 
 # Transformer
 for transformer in power_transformer_list:
