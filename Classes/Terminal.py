@@ -2,15 +2,12 @@ from .Equipment import Equipment
 
 class Terminal:
 
-    def __init__(self, IDTerminal, nameTerminal, CETerminal, CNTerminal):
+    def __init__(self, ID, name, CE, CN, passed):
 
-        self.IDTerminal = IDTerminal
-        self.nameTerminal = nameTerminal
-        self.CETerminal = CETerminal
-        self.CNTerminal = CNTerminal
-        self.CEList = [Equipment]
+        self.ID = ID
+        self.name = name
+        self.CE = CE
+        self.CN = CN
+        self.passed = passed
 
-    def addCE(self, newCE):
-        self.CEList.append(newCE)
-        # print('Conducting Equipment added to node')
-        return
+

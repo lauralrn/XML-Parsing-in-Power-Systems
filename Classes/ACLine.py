@@ -1,12 +1,17 @@
 class ACLine:
 
-    def __init__(self, IDLine, nameLine, equipmentContLine, rLine, xLine, bLine, gLine, baseVLine):
+    def __init__(self, ID, name, equipmentCont,lenght, r, x, b, g, baseV):
 
-        self.IDLine = IDLine
-        self.nameLine = nameLine
-        self.equipmentContLine = equipmentContLine
-        self.rLine = rLine
-        self.xLine = xLine
-        self.bLine = bLine
-        self.gLine = gLine
-        self.baseVLine = baseVLine
+        self.ID = ID
+        self.name = name
+        self.equipmentCont = equipmentCont
+        self.lenght = lenght
+        self.r = r
+        self.x = x
+        self.b = b
+        self.g = g
+        self.baseV = baseV
+        self.terminalList = []
+
+    def add_terminal(self, newTerminal):
+        self.terminalList.append(newTerminal)

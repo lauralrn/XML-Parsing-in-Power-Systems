@@ -1,7 +1,7 @@
 class Equipment:
 
-    def __init__(self, IDBB, nameBB, equipmentContBB):
+    def __init__(self, ID, name, equipmentCont):
 
-        self.IDBB = IDBB
-        self.nameBB = nameBB
-        self.equipmentContBB = equipmentContBB
+        self.ID = ID
+        self.name = name
+        self.equipmentCont = equipmentCont

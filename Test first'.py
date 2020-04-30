@@ -4,21 +4,21 @@ voltage_dict = {}
 for ids in microgrid.findall('cim:VoltageLevel', ns):
     vn = ids.find('cim:IdentifiedObject.name', ns).text
     id = ids.attrib.get(ns['rdf']+'ID')
-    voltage_dict[id] = vn
+    base_voltage_dict[id] = vn
 
 #Create buses
 for bus in microgrid.findall('cim:BusbarSection', ns):
     id= bus.attrib.get(ns['rdf']+'ID')
     name=bus.find('cim:IdentifiedObject.name', ns).text
     voltage=bus.find('cim:Equipment.EquipmentContainer', ns).attrib.get(ns['rdf']+'resource')
-    vn=voltage_dict[voltage[1:]]
+    vn=base_voltage_dict[voltage[1:]]
     pp.create_bus(net, index=id, name=name, vn_kv=vn, type="b")
 
 # for bus in microgrid.findall('cim:ConnectivityNode', ns):
 #     id = bus.attrib.get(ns['rdf'] + 'ID')
 #     name = bus.find('cim:IdentifiedObject.name', ns).text
 #     voltage = bus.find('cim:ConnectivityNode.ConnectivityNodeContainer', ns).attrib.get(ns['rdf'] + 'resource')
-#     vn=voltage_dict[voltage[1:]]
+#     vn=base_voltage_dict[voltage[1:]]
 #     pp.create_bus(net, index=id, name=name, vn_kv=vn, type="n")
 
 #print(net.bus)

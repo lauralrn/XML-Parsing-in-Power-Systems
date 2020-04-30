@@ -1,7 +1,7 @@
 class RatioTapChanger:
 
-    def __init__(self, IDRTC, nameRTC, stepRTC):
+    def __init__(self, ID, name, step):
 
-        self.IDRTC = IDRTC
-        self.nameRTC = nameRTC
-        self.stepRTC = stepRTC
+        self.ID = ID
+        self.name = name
+        self.step = step

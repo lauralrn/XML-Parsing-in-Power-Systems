@@ -1,7 +1,7 @@
 class BaseVoltage:
 
-    def __init__(self, IDBaseV, nameBaseV, baseV):
+    def __init__(self, ID, name, baseV):
 
-        self.IDBaseV = IDBaseV
-        self.nameBaseV = nameBaseV
-        self.baseV = baseV
+        self.ID= ID
+        self.name= name
+        self.baseV= baseV

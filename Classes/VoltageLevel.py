@@ -1,8 +1,8 @@
 class VoltageLevel:
 
-    def __init__(self, IDVLvl, nameVLvl, SSVLvl, VoltageVLvl):
+    def __init__(self, ID, name, SS, Voltage):
 
-        self.IDVLvl = IDVLvl
-        self.nameBaseV = nameVLvl
-        self.SSVLvl = SSVLvl
-        self.VoltageVLvl = VoltageVLvl
+        self.ID = ID
+        self.name= name
+        self.SS= SS
+        self.Voltage= Voltage

@@ -1,9 +1,13 @@
 class Breaker:
 
-    def __init__(self, IDBreaker, nameBreaker, stateBreaker, equipmentContBreaker, baseVolBreak):
+    def __init__(self, ID, name, state, equipmentCont, baseVol):
 
-        self.IDBreaker = IDBreaker
-        self.nameBreaker = nameBreaker
-        self.stateBreaker = stateBreaker
-        self.equipmentContBreaker = equipmentContBreaker
-        self.baseVolBreak = baseVolBreak
+        self.ID = ID
+        self.name = name
+        self.state = state
+        self.equipmentCont = equipmentCont
+        self.baseVol = baseVol
+        self.terminalList = []
+
+    def add_terminal(self, newTerminal):
+        self.terminalList.append(newTerminal)

@@ -1,7 +1,7 @@
 class Substation:   # A node would be equivalent to an electrical connection
 
-    def __init__(self, IDSS, nameSS, regionSS):
+    def __init__(self, ID, name, region):
 
-        self.IDSS = IDSS
-        self.nameSS = nameSS
-        self.regionSS = regionSS
+        self.ID = ID
+        self.name = name
+        self.region = region

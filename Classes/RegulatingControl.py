@@ -1,6 +1,6 @@
 class RegulatingControl:
 
-    def __init__(self, IDRegCtrl, nameRegCtrl, targetValue):
-        self.IDRegCtrl = IDRegCtrl
-        self.nameRegCtrl = nameRegCtrl
+    def __init__(self, ID, name, targetValue):
+        self.ID = ID
+        self.name = name
         self.targetValue = targetValue

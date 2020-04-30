@@ -1,10 +1,10 @@
-class PowerTransformer:
+class BusBar:
 
-    def __init__(self, ID, name, equipmentCont):
-
+    def __init__(self, ID,  name, equipmentCont, voltage):
         self.ID = ID
         self.name = name
         self.equipmentCont = equipmentCont
+        self.voltage = voltage
         self.terminalList = []
 
     def add_terminal(self, newTerminal):
