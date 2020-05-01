@@ -20,6 +20,9 @@ from Classes.EnergyConsumer import EnergyConsumer
 from Classes.PowerTransformerEnd import PowerTransformerEnd
 from Classes.RatioTapChanger import RatioTapChanger
 import pandapower.plotting.to_html as simple_plotly
+import pandapower.topology as top
+
+
 
 
 #Import the ElementTree library
@@ -363,6 +366,7 @@ for generator in generating_unit_list:
 
 simple_plotly(net, 'network.html')
 
+mg=top.create_nxgraph(net, respect_switches = False)
 
 
 

@@ -1,5 +1,3 @@
-from .Equipment import Equipment
-
 class Terminal:
 
     def __init__(self, ID, name, CE, CN, passed):
