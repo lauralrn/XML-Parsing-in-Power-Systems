@@ -6,7 +6,6 @@ from Classes.VoltageLevel import VoltageLevel
 from Classes.PowerTransformer import PowerTransformer
 from Classes.ACLine import ACLine
 from Classes.Terminal import Terminal
-from Classes.Equipment import Equipment
 from Classes.Breaker import Breaker
 from Classes.GeneratingUnit import GeneratingUnit
 from Classes.SynchronousMachine import SynchronousMachine

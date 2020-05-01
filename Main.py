@@ -1,6 +1,6 @@
 # Assignment 1  EH2745 Computer Applications in Power Systems
 # Author: Laura Laringe
-# Date: 2020-04-20
+# Date: 2020-04-30
 #
 
 from Classes.Node import Node
@@ -12,7 +12,6 @@ from Classes.VoltageLevel import VoltageLevel
 from Classes.PowerTransformer import PowerTransformer
 from Classes.ACLine import ACLine
 from Classes.Terminal import Terminal
-from Classes.Equipment import Equipment
 from Classes.Breaker import Breaker
 from Classes.GeneratingUnit import GeneratingUnit
 from Classes.SynchronousMachine import SynchronousMachine
@@ -29,7 +28,6 @@ import xml.etree.ElementTree as ET
 
 #import the pandapower module
 import pandapower as pp
-import pandas as pd
 
 #create an empty network
 from ConnectionsFinder import connections_finder
@@ -38,8 +36,6 @@ from TopologyGenerator import topology_generator
 net = pp.create_empty_network()
 
 #Creation of a tree by parsing the XML file referenced
-# tree_EQ = ET.parse('Assignment_EQ_reduced.xml')
-# tree_SSH = ET.parse('Assignment_SSH_reduced.xml')
 tree_EQ = ET.parse('MicroGridTestConfiguration_T1_BE_EQ_V2.xml')
 tree_SSH = ET.parse('MicroGridTestConfiguration_T1_BE_SSH_V2.xml')
 
@@ -292,7 +288,6 @@ find_attached_busbar = connections_finder(microgrid, microgrid_SSH, base_voltage
                       power_transformer_list, energy_consumer_list, power_transformer_end_list, breaker_list,
                       ratio_tap_changer_list, synchronous_machine_list, AC_lines_list)
 
-# The result of the function will track all the connections between the elements contained in the XML file
 
 # In this part the data needed to make a pandapower network will be found
 terminal_volt_dict = {}
@@ -326,10 +321,9 @@ for transformer in power_transformer_list:
             vn = terminal_volt_dict[wt].baseVol
             vn_lv_kv = base_volt_dict[vn[1:]]
 
-    pp.create_transformer_from_parameters(net, hv_bus =hv_bus, lv_bus =lv_bus, sn_mva = sn_mva, vn_hv_kv = vn_hv_kv,
+    pp.create_transformer_from_parameters(net, name=transformer.name, hv_bus =hv_bus, lv_bus =lv_bus, sn_mva = sn_mva, vn_hv_kv = vn_hv_kv,
                                           vn_lv_kv = vn_lv_kv, vkr_percent=10, vk_percent=0.3, pfe_kw=0, i0_percent=0)
 
-print(net)
 
 # Shunt
 for shunt in linear_shunt_compensator_list:
@@ -353,13 +347,13 @@ for line in AC_lines_list:
     pp.create_line_from_parameters(net, name=line.name, from_bus= from_bus, to_bus=to_bus, length_km=line.lenght,
                                    r_ohm_per_km= line.r, x_ohm_per_km= line.x, c_nf_per_km=0, max_i_ka=0)
 
-# Switch
-for switch in breaker_list:
-    bus, way_terminals = find_attached_busbar(switch)
-    #print(bus)
-    bus_name = bus[0].name
-    bus_pp = pp.get_element_index(net, "bus", bus_name)
-    #pp.create_switch(net, index=switch.ID, name=switch.name, bus=bus_pp, element= 'b', et=b)
+# # Switch
+# for switch in breaker_list:
+#     bus, way_terminals = find_attached_busbar(switch)
+#     #print(bus)
+#     bus_name = bus[0].name
+#     bus_pp = pp.get_element_index(net, "bus", bus_name)
+#     #pp.create_switch(net, index=switch.ID, name=switch.name, bus=bus_pp, element= 'b', et=b)
 
 # Generator
 for generator in generating_unit_list:
