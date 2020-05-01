@@ -19,7 +19,6 @@ from Classes.RegulatingControl import RegulatingControl
 from Classes.EnergyConsumer import EnergyConsumer
 from Classes.PowerTransformerEnd import PowerTransformerEnd
 from Classes.RatioTapChanger import RatioTapChanger
-# from ConnectionsFinder import *
 import pandapower.plotting.to_html as simple_plotly
 
 
