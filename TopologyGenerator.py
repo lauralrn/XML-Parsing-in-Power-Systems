@@ -16,6 +16,7 @@ from Classes.LinearShuntCompensator import LinearShuntCompensator
 from Classes.PowerTransformerEnd import PowerTransformerEnd
 from Classes.RatioTapChanger import RatioTapChanger
 from collections import deque
+from tkinter import messagebox
 
 
 def topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list, linear_shunt_compensator_list,
@@ -25,6 +26,11 @@ def topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list,
                        synchronous_machine_list, AC_lines_list):
     # Add elements in Node class, add them to node_list, find the terminals connected
     # and add them to terminalList in node
+
+    answer = messagebox.showinfo("Topology Generator algorithm","Let's check how the topology algorithm works!")
+    answer = messagebox.showinfo("Topology Generator algorithm","After a number of functions is defined, "
+                                                                "the algorithm start. Let's continue.")
+
     terminal_list = []
     node_list = []
     for terminal in microgrid.findall('Terminal'):
@@ -142,8 +148,7 @@ def topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list,
         return False
 
     # Initialize stacks
-    CN_stack = deque(
-        [])  # to push a CN as soon as it is visited, pop when all terminals attached to this node are traversed
+    CN_stack = deque([])  # to push a CN as soon as it is visited, pop when all terminals attached to this node are traversed
     CE_stack = deque([])  # to push a CE, as and when encountered
     everything_stack = deque([])  # to push all the visited nodes (CE, CN, Te)
 
@@ -159,8 +164,18 @@ def topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list,
     CE_list = []
     bus_flag = False
     flag = False
-
+    answer = messagebox.showinfo(title="Topology Generator algorithm",message=( "The algorithm starts with the current node =", curr_node) )
+    counter = 1
+    continue_messages = True
     while not flag:
+        if continue_messages:
+            answer = messagebox.askyesno(title="Topology Generator algorithm", message=("Step number", counter,
+                                         "current node = ", curr_node, " Do you want to continue?"))
+            if answer == False:
+                continue_messages=False
+        counter += 1
+
+
         if len(everything_stack) == 0 or curr_node not in everything_stack:
             everything_stack.append(curr_node)   # Add element to everything_stack
 
@@ -191,9 +206,7 @@ def topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list,
                 next_node = find_next_node(curr_node, prev_node)
             else:  # if there is no untraversed terminal remaining and go to another CN
                 final_CE_stack = CE_stack
-                #CE_stack = deque([])
-                final_everything_stack.append(everything_stack)  # publish the CE_stack and everything_stack
-                everything_stack = deque([])
+                final_everything_stack =everything_stack
                 CN_stack.pop()  # pop the current CN off the CN stack
                 if len(CN_stack) != 0:  # if the stack is not empty
                     curr_node = CN_stack[-1]  # mark the next node as the CN on top of CN stack
@@ -202,7 +215,7 @@ def topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list,
                 else:
                     # final_CE_stack.append(CE_stack)
                     final_CE_stack = CE_stack
-                    final_everything_stack.append(everything_stack)  # publish the CE_stack and everything_stack
+                    final_everything_stack = everything_stack  # publish the CE_stack and everything_stack
                     flag = True
 
         # If the current node is a CE
@@ -214,21 +227,22 @@ def topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list,
                 next_node = find_next_node(curr_node, prev_node)
             elif (not is_untraversed(curr_node) or is_open_breaker(curr_node)):
                 final_CE_stack = CE_stack
-                final_everything_stack.append(everything_stack)  # publish the CE_stack, everything_stack
-                everything_stack = deque([])
+                final_everything_stack =everything_stack  # publish the CE_stack, everything_stack
                 prev_node = curr_node
                 curr_node = CN_stack[-1]  # mark the next node as the CN on top of CN stack
                 next_node = find_next_node(curr_node, prev_node)
                 if len(CN_stack) == 0:  # if the stack is not empty
                     final_CE_stack = CE_stack
-                    final_everything_stack.append(everything_stack)  # publish the CE_stack and everything_stack
+                    final_everything_stack = everything_stack  # publish the CE_stack and everything_stack
                     flag = True
             elif bus_flag:  # go back to the CN
                 if not is_untraversed(node_flag):  # if the CN connected to the busbar has no other terminals connected
                     # end the algorithm publish the CE_stack, everything_stack
                     final_CE_stack = CE_stack
-                    final_everything_stack.append(everything_stack)
-                    everything_stack = deque([])
+                    final_everything_stack = everything_stack
+                    answer = messagebox.showinfo(title="Topology Generator algorithm",
+                                                 message=("Algorithm finished at step number", counter,
+                                                          "current node = ", curr_node))
                     flag = True
                 else:  # if the CN has other terminals connected go back
                     curr_node = node_flag  # mark the next node as the CN on top of CN stack

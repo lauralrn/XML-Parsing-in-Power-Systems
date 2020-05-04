@@ -3,7 +3,8 @@
 # Date: 2020-04-30
 #
 from tkinter.filedialog import askopenfilename
-
+from tkinter import messagebox
+from tkinter import *
 from Classes.Node import Node
 from Classes.Substation import Substation
 from Classes.BaseVoltage import BaseVoltage
@@ -34,14 +35,6 @@ import pandapower as pp
 #from ConnectionsFinder import find_attached_busbar
 from TopologyGenerator import topology_generator
 
-window = tk.Tk()
-label = tk.Label(
-    text="Assignment EH2745, Laura Laringe",
-    foreground="white",  # Set the text color to white
-    background="red"  # Set the background color to black
-)
-label.pack()
-text_box = tk.Text()
 
 
 
@@ -54,8 +47,9 @@ def open_file():
                            title = "Choose a file.")
     return file
 
-
+answer = messagebox.showinfo(title="Assignment 1, Laura Laringe", message=("Insert EQ file"))
 tree_EQ= ET.parse(open_file())
+answer = messagebox.showinfo(title="Assignment 1, Laura Laringe", message=("Insert SSH file"))
 tree_SSH = ET.parse(open_file())
 
 #tree_EQ = ET.parse('MicroGridTestConfiguration_T1_BE_EQ_V2.xml')
@@ -305,107 +299,289 @@ everything_stack, CE_stack = topology_generator(microgrid, microgrid_SSH, base_v
                        ratio_tap_changer_list, synchronous_machine_list, AC_lines_list)
 print('stack representing all the nodes in order= ', everything_stack)
 print('stack representing all the conducting equipment in order:', CE_stack)
-#
-# # find_attached_busbar = connections_finder(microgrid, microgrid_SSH, base_voltage_list, busbar_list, linear_shunt_compensator_list,
-# #                       substation_list, voltage_level_list, generating_unit_list, regulating_control_list,
-# #                       power_transformer_list, energy_consumer_list, power_transformer_end_list, breaker_list,
-# #                       ratio_tap_changer_list, synchronous_machine_list, AC_lines_list)
-# #
-#
-# # In this part the data needed to make a pandapower network will be found
-# terminal_volt_dict = {}
-# for transformerend in power_transformer_end_list:
-#     tte = transformerend.terminal
-#     terminal_volt_dict[tte[1:]] = transformerend
-#
-# base_volt_dict = {}
-# for voltage in base_voltage_list:
-#     baseVol = voltage.ID
-#     base_voltage = voltage.name
-#     base_volt_dict[baseVol] = base_voltage
-#
-# # BUS
-# for bus in busbar_list:
-#     pp.create_bus(net, name=bus.name, vn_kv=bus.voltage, type="b")
-#
-# # Transformer
-# for transformer in power_transformer_list:
-#     bus_list, way_terminals = cf.find_attached_busbar(transformer)
-#     for bus, wt in zip(bus_list, way_terminals):
-#         if terminal_volt_dict[wt].end_number == '1':
-#             bus_high = bus
-#             hv_bus = pp.get_element_index(net, "bus", bus.name)
-#             vn =  terminal_volt_dict[wt].baseVol
-#             vn_hv_kv = base_volt_dict[vn[1:]]
-#             sn_mva = terminal_volt_dict[wt].s
-#         elif terminal_volt_dict[wt].end_number == '2':
-#             bus_low = bus
-#             lv_bus = pp.get_element_index(net, "bus", bus.name)
-#             vn = terminal_volt_dict[wt].baseVol
-#             vn_lv_kv = base_volt_dict[vn[1:]]
-#
-#     pp.create_transformer_from_parameters(net, name=transformer.name, hv_bus =hv_bus, lv_bus =lv_bus, sn_mva = sn_mva, vn_hv_kv = vn_hv_kv,
-#                                           vn_lv_kv = vn_lv_kv, vkr_percent=10, vk_percent=0.3, pfe_kw=0, i0_percent=0)
-#
-#
-# # Shunt
-# for shunt in linear_shunt_compensator_list:
-#     bus, way_terminals = cf.find_attached_busbar(shunt)
-#     bus_name = bus[0].name
-#     bus_pp = pp.get_element_index(net, "bus", bus_name)
-#     pp.create_shunt(net, name=shunt.name, bus= bus_pp, p_mw = shunt.p, q_mvar = shunt.q)
-#
-# # Load
-# for load in energy_consumer_list:
-#     bus, way_terminals = cf.find_attached_busbar(load)
-#     bus_name = bus[0].name
-#     bus_pp = pp.get_element_index(net, "bus", bus_name)
-#     pp.create_load(net, name=load.name, bus= bus_pp, p_mw=load.P)
-#
-# # Line
-# for line in AC_lines_list:
-#     bus_list, way_terminals = cf.find_attached_busbar(line)
-#     from_bus = pp.get_element_index(net, "bus", bus_list[0].name)
-#     to_bus = pp.get_element_index(net, "bus", bus_list[1].name)
-#     pp.create_line_from_parameters(net, name=line.name, from_bus= from_bus, to_bus=to_bus, length_km=line.lenght,
-#                                    r_ohm_per_km= line.r, x_ohm_per_km= line.x, c_nf_per_km=0, max_i_ka=0)
-#
-# # # Switch
-# # for switch in breaker_list:
-# #     bus, way_terminals = cf.find_attached_busbar(switch)
-# #     if switch.state == 'false':
-# #         state = False
-# #        else:
-# #          state = True
-# #     if lenght(bus) == 2:
-# #         from_bus = pp.get_element_index(net, "bus", bus[0].name)
-# #         to_bus = pp.get_element_index(net, "bus", bus[1].name)
-# #         pp.create_switch(net, from_bus, to_bus, et='b',
-# #         type=state, name=switch.name)
-# #     if lenght(bus) == 1:
-# #         bus = pp.get_element_index(net, "bus", bus[0].name)
-# #         list = find_CE_list(switch)
-# #         for ce in list:
-# #            if its not a bus:
-# #                 type = find the type
-# #
-# #
-# #     bus_name = bus[0].name
-# #     bus_pp = pp.get_element_index(net, "bus", bus_name)
-# #     #pp.create_switch(net, index=switch.ID, name=switch.name, bus=bus, element= 'b', et=b)
-#
-# # Generator
-# for generator in generating_unit_list:
-#     bus, way_terminals = cf.find_attached_busbar(generator)
-#     bus_name = bus[0].name
-#     bus_pp = pp.get_element_index(net, "bus", bus_name)
-#     pp.create_gen(net, name=generator.name, bus= bus_pp, p_mw= generator.power)
-#
-# simple_plotly(net, 'network.html')
-#
-# mg=top.create_nxgraph(net, respect_switches = False)
-#
-#
-#
 
-window.mainloop()
+
+
+
+# Add elements in Node class, add them to node_list, find the terminals connected
+# and add them to terminalList in node
+terminal_list = []
+node_list = []
+for terminal in microgrid.findall('Terminal'):
+    CN = terminal.find('Terminal.ConnectivityNode').attrib['resource']
+    ID = terminal.get('ID')
+    name = terminal.find('IdentifiedObject.name').text
+    CE = terminal.find('Terminal.ConductingEquipment').attrib['resource']
+    passed = False
+    terminal_class = Terminal(ID, name, CE, CN, passed)
+    terminal_list.append(terminal_class)
+
+for node in microgrid.findall('ConnectivityNode'):
+    ID = node.get('ID')
+    name = node.find('IdentifiedObject.name').text
+    container = node.find('ConnectivityNode.ConnectivityNodeContainer').attrib['resource']
+    node_class = Node(ID, name, container)
+
+    for terminal in terminal_list:
+        if ID == terminal.CN[1:]:
+            node_class.add_terminal(terminal)
+
+    node_list.append(node_class)
+
+# Add Conducting Equipment to list
+equipment_list = (busbar_list + linear_shunt_compensator_list + generating_unit_list + power_transformer_list +
+                  energy_consumer_list + breaker_list + synchronous_machine_list + AC_lines_list)
+
+# Find the terminals connected to every CE and add them to terminalList of each component
+for ce in equipment_list:
+    if (isinstance(ce, ACLine) or isinstance(ce, Breaker) or isinstance(ce, PowerTransformer)
+            or isinstance(ce, SynchronousMachine) or isinstance(ce, LinearShuntCompensator)
+            or isinstance(ce, BusBar) or isinstance(ce, EnergyConsumer) or isinstance(ce, PowerTransformerEnd)):
+        for terminal in terminal_list:
+            if ce.ID == terminal.CE[1:]:
+                ce.add_terminal(terminal)
+
+# for the generating unit, at first, the synchronous machine connected to it is found
+for ce in generating_unit_list:
+    for machine in synchronous_machine_list:
+        if ce.ID == machine.gen_unit[1:]:
+            ce.terminalList = machine.terminalList
+
+for pt in power_transformer_list:
+    pt.terminalList = list(set(pt.terminalList))
+
+# Define function to check if element is a Te
+def check_terminal(curr_node):
+    return isinstance(curr_node, Terminal)
+
+# Define function to check if element is a CN
+def check_CN(curr_node):
+    return isinstance(curr_node, Node)
+
+# Define function to check if element is a busbar
+def check_busbar(curr_node):
+    return isinstance(curr_node, BusBar)
+
+# Define function to check if element is a CE
+def check_CE(curr_node):
+    return (isinstance(curr_node, ACLine) or isinstance(curr_node, Breaker) or isinstance(curr_node, GeneratingUnit)
+            or isinstance(curr_node, PowerTransformer) or isinstance(curr_node, SynchronousMachine)
+            or isinstance(curr_node, LinearShuntCompensator) or isinstance(curr_node, BusBar)
+            or isinstance(curr_node, EnergyConsumer))
+
+# Define function that finds the node following the input node
+def find_next_node(curr_node, prev_node):
+    if check_terminal(curr_node):
+        if check_CE(prev_node):
+            for cn in node_list:
+                if cn.ID == curr_node.CN[1:]:
+                    next_node = cn
+                    return next_node
+        if check_CN(prev_node):
+            for ce in equipment_list:
+                if ce.ID == curr_node.CE[1:]:
+                    next_node = ce
+                    return next_node
+    if check_CN(curr_node):
+        for te in terminal_list:
+            if curr_node.ID == te.CN[1:]:
+                next_node = te
+                return next_node
+    if check_CE(curr_node):
+        for te in curr_node.terminalList:
+            if not te.passed:
+                next_node = te
+                return next_node
+
+# Define function to check if there is a busbar connected to a CN
+# Returns the busbar if it is connected to a busbar and false if it is not
+def bus_connected_to_CN(CN):
+   for terminal in CN.terminalList:
+       CE = find_next_node(terminal, CN)
+       if isinstance(CE, BusBar):
+           return CE
+       elif isinstance(CE, Breaker):
+           if CE.state == 'false':
+               for terminal in CE.terminalList:
+                   temp_cn = find_next_node(terminal, CE)
+                   for cn_terminal in temp_cn.terminalList:
+                       temp_ce = find_next_node(cn_terminal, temp_cn)
+                       if isinstance(temp_ce, BusBar):
+                           return temp_ce
+
+   return False
+
+# Define function that find the list of CNs of a CE
+def find_attached_CN(CE):
+    attached_CN_list = []
+    for terminal in CE.terminalList:
+        CN = find_next_node(terminal, CE)
+        attached_CN_list.append(CN)
+    return attached_CN_list, CE.terminalList
+
+
+# Define function that from a CE(!=BusBar) as an input returns the buses attached
+def find_attached_busbar(CE):
+    if not check_busbar(CE):
+        attached_busbar_list = []
+        way_terminals_list = []
+        conn_node_list, way_terminals = find_attached_CN(CE)
+        for cn, wt in zip(conn_node_list, way_terminals):
+            # check if the cn is connected to any busbar
+            if bus_connected_to_CN(cn) is not False: #if a bus is connected
+               bus = bus_connected_to_CN(cn)
+               attached_busbar_list.append(bus)
+               way_terminals_list.append(wt.ID)
+        return attached_busbar_list, way_terminals_list
+    return 'current node is already a busbar'
+
+
+# Define function to find list of CE connected
+def find_CE_list(CE):
+    CN = find_attached_CN(CE)
+    connected_ce_list = []
+    for node in CN:
+        for te in CN.terminalList:
+            connected_ce_list.append(find_next_node(terminal, node))
+    return connected_ce_list
+
+#Define function that prints the type of the CE
+def ce_type(ce):
+    if isinstance(ce, ACLine):
+        return 'l'
+    if isinstance(ce, Breaker):
+        return 'breaker'
+    if isinstance(ce, PowerTransformer):
+        return 't'
+    if isinstance(ce, SynchronousMachine):
+        return 's'
+    if isinstance(ce, LinearShuntCompensator):
+        return 'l'
+    if isinstance(ce, EnergyConsumer):
+        return 'load'
+    if isinstance(ce, BusBar):
+        return 'b'
+
+
+# # In this part the data needed to make a pandapower network will be found
+terminal_volt_dict = {}
+for transformerend in power_transformer_end_list:
+    tte = transformerend.terminal
+    terminal_volt_dict[tte[1:]] = transformerend
+
+base_volt_dict = {}
+for voltage in base_voltage_list:
+    baseVol = voltage.ID
+    base_voltage = voltage.name
+    base_volt_dict[baseVol] = base_voltage
+
+# BUS
+for bus in busbar_list:
+    pp.create_bus(net, name=bus.name, vn_kv=bus.voltage, type="b")
+
+# Transformer
+for transformer in power_transformer_list:
+    bus_list, way_terminals = find_attached_busbar(transformer)
+    for bus, wt in zip(bus_list, way_terminals):
+        if terminal_volt_dict[wt].end_number == '1':
+            bus_high = bus
+            hv_bus = pp.get_element_index(net, "bus", bus.name)
+            vn =  terminal_volt_dict[wt].baseVol
+            vn_hv_kv = base_volt_dict[vn[1:]]
+            sn_mva = terminal_volt_dict[wt].s
+        elif terminal_volt_dict[wt].end_number == '2':
+            bus_low = bus
+            lv_bus = pp.get_element_index(net, "bus", bus.name)
+            vn = terminal_volt_dict[wt].baseVol
+            vn_lv_kv = base_volt_dict[vn[1:]]
+
+    pp.create_transformer_from_parameters(net, name=transformer.name, hv_bus =hv_bus, lv_bus =lv_bus, sn_mva = sn_mva, vn_hv_kv = vn_hv_kv,
+                                          vn_lv_kv = vn_lv_kv, vkr_percent=10, vk_percent=0.3, pfe_kw=0, i0_percent=0)
+
+# Shunt
+for shunt in linear_shunt_compensator_list:
+    bus, way_terminals = find_attached_busbar(shunt)
+    bus_name = bus[0].name
+    bus_pp = pp.get_element_index(net, "bus", bus_name)
+    pp.create_shunt(net, name=shunt.name, bus= bus_pp, p_mw = shunt.p, q_mvar = shunt.q)
+
+# Load
+for load in energy_consumer_list:
+    bus, way_terminals = find_attached_busbar(load)
+    bus_name = bus[0].name
+    bus_pp = pp.get_element_index(net, "bus", bus_name)
+    pp.create_load(net, name=load.name, bus= bus_pp, p_mw=load.P)
+
+# Line
+for line in AC_lines_list:
+    bus_list, way_terminals = find_attached_busbar(line)
+    from_bus = pp.get_element_index(net, "bus", bus_list[0].name)
+    to_bus = pp.get_element_index(net, "bus", bus_list[1].name)
+    pp.create_line_from_parameters(net, name=line.name, from_bus= from_bus, to_bus=to_bus, length_km=line.lenght,
+                                   r_ohm_per_km= line.r, x_ohm_per_km= line.x, c_nf_per_km=0, max_i_ka=0)
+
+# Switch
+for switch in breaker_list:
+    bus, way_terminals = find_attached_busbar(switch)
+    if switch.state == 'false':
+        state = False
+    else:
+        state = True
+    if isinstance(bus, list):
+        from_bus = pp.get_element_index(net, "bus", bus[0].name)
+        to_bus = pp.get_element_index(net, "bus", bus[1].name)
+        pp.create_switch(net, from_bus, to_bus, et='b',
+        type=state, name=switch.name)
+    else:
+        bus = pp.get_element_index(net, "bus", bus.name)
+        list = find_CE_list(switch)
+        for ce in list:
+           if not check_busbar(ce):
+                type = ce_type(ce)
+                pp.create_switch(net, name=switch.name, bus=bus, et=type)
+
+# Generator
+for generator in generating_unit_list:
+    bus, way_terminals = find_attached_busbar(generator)
+    bus_name = bus[0].name
+    bus_pp = pp.get_element_index(net, "bus", bus_name)
+    pp.create_gen(net, name=generator.name, bus= bus_pp, p_mw= generator.power)
+
+
+simple_plotly(net, 'network.html')
+
+import tkinter as tk
+
+OptionList = list([element.name for element in everything_stack])
+
+app = tk.Tk()
+
+app.geometry('700x400')
+
+variable = tk.StringVar(app)
+variable.set(OptionList[0])
+
+answer = messagebox.showinfo(title="Assignment 1, Laura Laringe", message=("Now, you can choose to "
+                                                                           "display any node's information"))
+
+Label(app, text="Select a node to display its information!")
+opt = tk.OptionMenu(app, variable, *OptionList)
+opt.config(width=200, font=('Helvetica', 12))
+opt.pack(side="top")
+
+
+labelTest = tk.Label(text="", font=('Helvetica', 12), fg='red')
+labelTest.pack(side="top")
+
+def callback(*args):
+    labelTest.configure(text="The selected item has these parameters:")
+    labelTest.configure(text ="name: {}" .format(variable.get()))
+    for node in everything_stack:
+        if "{}".format(variable.get()) == node.name:
+            attrs = vars(node)
+            labelTest.configure(text =', '.join("%s: %s" % item for item in attrs.items()))
+
+
+variable.trace("w", callback)
+
+app.mainloop()
