@@ -156,6 +156,7 @@ def topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list,
     next_node = find_next_node(curr_node, prev_node)
     final_everything_stack = []
     final_CE_stack = []
+    CE_list = []
     bus_flag = False
     flag = False
 
@@ -189,7 +190,6 @@ def topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list,
                 curr_node = next_node
                 next_node = find_next_node(curr_node, prev_node)
             else:  # if there is no untraversed terminal remaining and go to another CN
-                # final_CE_stack.append(CE_stack)
                 final_CE_stack = CE_stack
                 #CE_stack = deque([])
                 final_everything_stack.append(everything_stack)  # publish the CE_stack and everything_stack
@@ -213,25 +213,20 @@ def topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list,
                 curr_node = next_node
                 next_node = find_next_node(curr_node, prev_node)
             elif (not is_untraversed(curr_node) or is_open_breaker(curr_node)):
-                # final_CE_stack.append(CE_stack)
                 final_CE_stack = CE_stack
-                #CE_stack = deque([])
                 final_everything_stack.append(everything_stack)  # publish the CE_stack, everything_stack
                 everything_stack = deque([])
                 prev_node = curr_node
                 curr_node = CN_stack[-1]  # mark the next node as the CN on top of CN stack
                 next_node = find_next_node(curr_node, prev_node)
                 if len(CN_stack) == 0:  # if the stack is not empty
-                    #final_CE_stack.append(CE_stack)
                     final_CE_stack = CE_stack
                     final_everything_stack.append(everything_stack)  # publish the CE_stack and everything_stack
                     flag = True
             elif bus_flag:  # go back to the CN
                 if not is_untraversed(node_flag):  # if the CN connected to the busbar has no other terminals connected
                     # end the algorithm publish the CE_stack, everything_stack
-                    # final_CE_stack.append(CE_stack)
                     final_CE_stack = CE_stack
-                    #CE_stack = deque([])
                     final_everything_stack.append(everything_stack)
                     everything_stack = deque([])
                     flag = True

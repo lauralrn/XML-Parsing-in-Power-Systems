@@ -1,3 +1,4 @@
 pandapower
 networkx
 elementpath
+tkinter

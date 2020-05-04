@@ -2,6 +2,7 @@
 # Author: Laura Laringe
 # Date: 2020-04-30
 #
+from tkinter.filedialog import askopenfilename
 
 from Classes.Node import Node
 from Classes.Substation import Substation
@@ -21,9 +22,7 @@ from Classes.PowerTransformerEnd import PowerTransformerEnd
 from Classes.RatioTapChanger import RatioTapChanger
 import pandapower.plotting.to_html as simple_plotly
 import pandapower.topology as top
-
-
-
+import tkinter as tk
 
 #Import the ElementTree library
 import xml.etree.ElementTree as ET
@@ -32,15 +31,35 @@ import xml.etree.ElementTree as ET
 import pandapower as pp
 
 #create an empty network
-from ConnectionsFinder import connections_finder
+#from ConnectionsFinder import find_attached_busbar
 from TopologyGenerator import topology_generator
+
+window = tk.Tk()
+label = tk.Label(
+    text="Assignment EH2745, Laura Laringe",
+    foreground="white",  # Set the text color to white
+    background="red"  # Set the background color to black
+)
+label.pack()
+text_box = tk.Text()
+
+
 
 net = pp.create_empty_network()
 
 #Creation of a tree by parsing the XML file referenced
-tree_EQ = ET.parse('MicroGridTestConfiguration_T1_BE_EQ_V2.xml')
-tree_SSH = ET.parse('MicroGridTestConfiguration_T1_BE_SSH_V2.xml')
+# Select files in the GUI
+def open_file():
+    file = askopenfilename(filetypes =(("xml File", "*.xml"),("All Files","*.*")),
+                           title = "Choose a file.")
+    return file
 
+
+tree_EQ= ET.parse(open_file())
+tree_SSH = ET.parse(open_file())
+
+#tree_EQ = ET.parse('MicroGridTestConfiguration_T1_BE_EQ_V2.xml')
+#tree_SSH = ET.parse('MicroGridTestConfiguration_T1_BE_SSH_V2.xml')
 
 #Access the root of the tree
 microgrid = tree_EQ.getroot()
@@ -280,93 +299,113 @@ for line in microgrid.findall('ACLineSegment'):
     AC_lines_list.append(ACLine(ID, name, equipmentCont, lenght, r, x, b, g, baseV))
 
 # Run the algorithm contained in the function
-# everything_stack, CE_stack = topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list, linear_shunt_compensator_list,
-#                       substation_list, voltage_level_list, generating_unit_list, regulating_control_list,
-#                       power_transformer_list, energy_consumer_list, power_transformer_end_list, breaker_list,
-#                       ratio_tap_changer_list, synchronous_machine_list, AC_lines_list)
-
-find_attached_busbar = connections_finder(microgrid, microgrid_SSH, base_voltage_list, busbar_list, linear_shunt_compensator_list,
-                      substation_list, voltage_level_list, generating_unit_list, regulating_control_list,
-                      power_transformer_list, energy_consumer_list, power_transformer_end_list, breaker_list,
-                      ratio_tap_changer_list, synchronous_machine_list, AC_lines_list)
-
-
-# In this part the data needed to make a pandapower network will be found
-terminal_volt_dict = {}
-for transformerend in power_transformer_end_list:
-    tte = transformerend.terminal
-    terminal_volt_dict[tte[1:]] = transformerend
-
-base_volt_dict = {}
-for voltage in base_voltage_list:
-    baseVol = voltage.ID
-    base_voltage = voltage.name
-    base_volt_dict[baseVol] = base_voltage
-
-# BUS
-for bus in busbar_list:
-    pp.create_bus(net, name=bus.name, vn_kv=bus.voltage, type="b")
-
-# Transformer
-for transformer in power_transformer_list:
-    bus_list, way_terminals = find_attached_busbar(transformer)
-    for bus, wt in zip(bus_list, way_terminals):
-        if terminal_volt_dict[wt].end_number == '1':
-            bus_high = bus
-            hv_bus = pp.get_element_index(net, "bus", bus.name)
-            vn =  terminal_volt_dict[wt].baseVol
-            vn_hv_kv = base_volt_dict[vn[1:]]
-            sn_mva = terminal_volt_dict[wt].s
-        elif terminal_volt_dict[wt].end_number == '2':
-            bus_low = bus
-            lv_bus = pp.get_element_index(net, "bus", bus.name)
-            vn = terminal_volt_dict[wt].baseVol
-            vn_lv_kv = base_volt_dict[vn[1:]]
-
-    pp.create_transformer_from_parameters(net, name=transformer.name, hv_bus =hv_bus, lv_bus =lv_bus, sn_mva = sn_mva, vn_hv_kv = vn_hv_kv,
-                                          vn_lv_kv = vn_lv_kv, vkr_percent=10, vk_percent=0.3, pfe_kw=0, i0_percent=0)
-
-
-# Shunt
-for shunt in linear_shunt_compensator_list:
-    bus, way_terminals = find_attached_busbar(shunt)
-    bus_name = bus[0].name
-    bus_pp = pp.get_element_index(net, "bus", bus_name)
-    pp.create_shunt(net, name=shunt.name, bus= bus_pp, p_mw = shunt.p, q_mvar = shunt.q)
-
-# Load
-for load in energy_consumer_list:
-    bus, way_terminals = find_attached_busbar(load)
-    bus_name = bus[0].name
-    bus_pp = pp.get_element_index(net, "bus", bus_name)
-    pp.create_load(net, name=load.name, bus= bus_pp, p_mw=load.P)
-
-# Line
-for line in AC_lines_list:
-    bus_list, way_terminals = find_attached_busbar(line)
-    from_bus = pp.get_element_index(net, "bus", bus_list[0].name)
-    to_bus = pp.get_element_index(net, "bus", bus_list[1].name)
-    pp.create_line_from_parameters(net, name=line.name, from_bus= from_bus, to_bus=to_bus, length_km=line.lenght,
-                                   r_ohm_per_km= line.r, x_ohm_per_km= line.x, c_nf_per_km=0, max_i_ka=0)
-
-# # Switch
-# for switch in breaker_list:
-#     bus, way_terminals = find_attached_busbar(switch)
-#     #print(bus)
+everything_stack, CE_stack = topology_generator(microgrid, microgrid_SSH, base_voltage_list, busbar_list, linear_shunt_compensator_list,
+                       substation_list, voltage_level_list, generating_unit_list, regulating_control_list,
+                       power_transformer_list, energy_consumer_list, power_transformer_end_list, breaker_list,
+                       ratio_tap_changer_list, synchronous_machine_list, AC_lines_list)
+print('stack representing all the nodes in order= ', everything_stack)
+print('stack representing all the conducting equipment in order:', CE_stack)
+#
+# # find_attached_busbar = connections_finder(microgrid, microgrid_SSH, base_voltage_list, busbar_list, linear_shunt_compensator_list,
+# #                       substation_list, voltage_level_list, generating_unit_list, regulating_control_list,
+# #                       power_transformer_list, energy_consumer_list, power_transformer_end_list, breaker_list,
+# #                       ratio_tap_changer_list, synchronous_machine_list, AC_lines_list)
+# #
+#
+# # In this part the data needed to make a pandapower network will be found
+# terminal_volt_dict = {}
+# for transformerend in power_transformer_end_list:
+#     tte = transformerend.terminal
+#     terminal_volt_dict[tte[1:]] = transformerend
+#
+# base_volt_dict = {}
+# for voltage in base_voltage_list:
+#     baseVol = voltage.ID
+#     base_voltage = voltage.name
+#     base_volt_dict[baseVol] = base_voltage
+#
+# # BUS
+# for bus in busbar_list:
+#     pp.create_bus(net, name=bus.name, vn_kv=bus.voltage, type="b")
+#
+# # Transformer
+# for transformer in power_transformer_list:
+#     bus_list, way_terminals = cf.find_attached_busbar(transformer)
+#     for bus, wt in zip(bus_list, way_terminals):
+#         if terminal_volt_dict[wt].end_number == '1':
+#             bus_high = bus
+#             hv_bus = pp.get_element_index(net, "bus", bus.name)
+#             vn =  terminal_volt_dict[wt].baseVol
+#             vn_hv_kv = base_volt_dict[vn[1:]]
+#             sn_mva = terminal_volt_dict[wt].s
+#         elif terminal_volt_dict[wt].end_number == '2':
+#             bus_low = bus
+#             lv_bus = pp.get_element_index(net, "bus", bus.name)
+#             vn = terminal_volt_dict[wt].baseVol
+#             vn_lv_kv = base_volt_dict[vn[1:]]
+#
+#     pp.create_transformer_from_parameters(net, name=transformer.name, hv_bus =hv_bus, lv_bus =lv_bus, sn_mva = sn_mva, vn_hv_kv = vn_hv_kv,
+#                                           vn_lv_kv = vn_lv_kv, vkr_percent=10, vk_percent=0.3, pfe_kw=0, i0_percent=0)
+#
+#
+# # Shunt
+# for shunt in linear_shunt_compensator_list:
+#     bus, way_terminals = cf.find_attached_busbar(shunt)
 #     bus_name = bus[0].name
 #     bus_pp = pp.get_element_index(net, "bus", bus_name)
-#     #pp.create_switch(net, index=switch.ID, name=switch.name, bus=bus_pp, element= 'b', et=b)
+#     pp.create_shunt(net, name=shunt.name, bus= bus_pp, p_mw = shunt.p, q_mvar = shunt.q)
+#
+# # Load
+# for load in energy_consumer_list:
+#     bus, way_terminals = cf.find_attached_busbar(load)
+#     bus_name = bus[0].name
+#     bus_pp = pp.get_element_index(net, "bus", bus_name)
+#     pp.create_load(net, name=load.name, bus= bus_pp, p_mw=load.P)
+#
+# # Line
+# for line in AC_lines_list:
+#     bus_list, way_terminals = cf.find_attached_busbar(line)
+#     from_bus = pp.get_element_index(net, "bus", bus_list[0].name)
+#     to_bus = pp.get_element_index(net, "bus", bus_list[1].name)
+#     pp.create_line_from_parameters(net, name=line.name, from_bus= from_bus, to_bus=to_bus, length_km=line.lenght,
+#                                    r_ohm_per_km= line.r, x_ohm_per_km= line.x, c_nf_per_km=0, max_i_ka=0)
+#
+# # # Switch
+# # for switch in breaker_list:
+# #     bus, way_terminals = cf.find_attached_busbar(switch)
+# #     if switch.state == 'false':
+# #         state = False
+# #        else:
+# #          state = True
+# #     if lenght(bus) == 2:
+# #         from_bus = pp.get_element_index(net, "bus", bus[0].name)
+# #         to_bus = pp.get_element_index(net, "bus", bus[1].name)
+# #         pp.create_switch(net, from_bus, to_bus, et='b',
+# #         type=state, name=switch.name)
+# #     if lenght(bus) == 1:
+# #         bus = pp.get_element_index(net, "bus", bus[0].name)
+# #         list = find_CE_list(switch)
+# #         for ce in list:
+# #            if its not a bus:
+# #                 type = find the type
+# #
+# #
+# #     bus_name = bus[0].name
+# #     bus_pp = pp.get_element_index(net, "bus", bus_name)
+# #     #pp.create_switch(net, index=switch.ID, name=switch.name, bus=bus, element= 'b', et=b)
+#
+# # Generator
+# for generator in generating_unit_list:
+#     bus, way_terminals = cf.find_attached_busbar(generator)
+#     bus_name = bus[0].name
+#     bus_pp = pp.get_element_index(net, "bus", bus_name)
+#     pp.create_gen(net, name=generator.name, bus= bus_pp, p_mw= generator.power)
+#
+# simple_plotly(net, 'network.html')
+#
+# mg=top.create_nxgraph(net, respect_switches = False)
+#
+#
+#
 
-# Generator
-for generator in generating_unit_list:
-    bus, way_terminals = find_attached_busbar(generator)
-    bus_name = bus[0].name
-    bus_pp = pp.get_element_index(net, "bus", bus_name)
-    pp.create_gen(net, name=generator.name, bus= bus_pp, p_mw= generator.power)
-
-simple_plotly(net, 'network.html')
-
-mg=top.create_nxgraph(net, respect_switches = False)
-
-
-
+window.mainloop()
